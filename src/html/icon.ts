@@ -1,5 +1,6 @@
 import { showProblemDialog } from '@cards/components/problem/dialog/show-dialog-problem';
 import { shouldShowMoldIndicator } from '@delegates/checks/moldy';
+import { resolveEntityIcon } from '@delegates/utils/icon-cache';
 import { stateActive } from '@hass/common/entity/state_active';
 import type { HomeAssistant } from '@hass/types';
 import type { Config } from '@type/config';
@@ -55,6 +56,7 @@ export const renderProblemIndicator = (
           <ha-state-icon
             .hass=${hass}
             .stateObj=${sensors.mold}
+            .icon=${resolveEntityIcon(hass, sensors.mold)}
           ></ha-state-icon>
           <span class="mold-text">${stateDisplay(hass, sensors.mold)}</span>
         </div>`

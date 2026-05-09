@@ -1,4 +1,5 @@
 import { ProblemEntityRow } from '@cards/components/problem/row/problem-entity-row';
+import * as iconCacheModule from '@delegates/utils/icon-cache';
 import * as fireEventModule from '@hass/common/dom/fire_event';
 import type { HomeAssistant } from '@hass/types';
 import { fixture } from '@open-wc/testing-helpers';
@@ -11,6 +12,7 @@ describe('problem-entity-row.ts', () => {
   let element: ProblemEntityRow;
   let mockHass: HomeAssistant;
   let fireEventStub: SinonStub;
+  let resolveEntityIconStub: SinonStub;
 
   const mockActiveEntity = createStateEntity(
     'binary_sensor',
@@ -27,6 +29,10 @@ describe('problem-entity-row.ts', () => {
 
   beforeEach(() => {
     fireEventStub = stub(fireEventModule, 'fireEvent');
+    resolveEntityIconStub = stub(
+      iconCacheModule,
+      'resolveEntityIcon',
+    ).returns(undefined);
 
     mockHass = {
       localize: (key: string) => key,
@@ -56,6 +62,7 @@ describe('problem-entity-row.ts', () => {
 
   afterEach(() => {
     fireEventStub.restore();
+    resolveEntityIconStub.restore();
   });
 
   describe('render', () => {

@@ -12,6 +12,8 @@ export interface EntityRegistryDisplayEntry {
   labels: string[];
   hidden?: boolean;
   platform?: string;
+  icon?: string;
+  translation_key?: string;
 }
 
 export interface EntityRegistryEntry extends RegistryEntry {

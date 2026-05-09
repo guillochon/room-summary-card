@@ -4,6 +4,10 @@ import {
   actionHandler,
   handleClickAction,
 } from '@delegates/action-handler-delegate';
+import {
+  prefetchIconResources,
+  resolveEntityIcon,
+} from '@delegates/utils/icon-cache';
 import { computeEntityName } from '@hass/common/entity/compute_entity_name';
 import type { HomeAssistant } from '@hass/types';
 import { renderBadgeElements } from '@html/badge-squad';
@@ -147,6 +151,10 @@ export class RoomStateIcon extends HassUpdateMixin(LitElement) {
   // @ts-ignore
   override set hass(hass: HomeAssistant) {
     d(this._config, 'room-state-icon', 'set hass');
+
+    // Pre-fetch icon resources for fast synchronous icon resolution
+    prefetchIconResources(hass);
+
     this._image = hasEntityFeature(this.entity, 'use_entity_icon')
       ? undefined
       : this.entity?.state?.attributes?.entity_picture;
@@ -230,6 +238,12 @@ export class RoomStateIcon extends HassUpdateMixin(LitElement) {
       thresholdResult,
     });
 
+    // When no icon was determined by config/threshold/climate logic,
+    // pre-resolve from cached HA icon resources so ha-state-icon
+    // gets an immediate icon instead of making an async WebSocket call.
+    const resolvedIcon =
+      icon ?? (state ? resolveEntityIcon(this._hass, state) : undefined);
+
     // Render badges (max 4)
     const badgeElements = renderBadgeElements(
       this.entity,
@@ -250,7 +264,7 @@ export class RoomStateIcon extends HassUpdateMixin(LitElement) {
           : html`<ha-state-icon
               .hass=${this._hass}
               .stateObj=${state}
-              .icon=${icon}
+              .icon=${resolvedIcon}
             ></ha-state-icon>`}
         ${badgeElements}
         ${label ? html`<div class="entity-label">${label}</div>` : nothing}

@@ -1,3 +1,4 @@
+import * as iconCacheModule from '@delegates/utils/icon-cache';
 import type { HomeAssistant } from '@hass/types';
 import { renderProblemIndicator, renderRoomIcon } from '@html/icon';
 import { fixture } from '@open-wc/testing-helpers';
@@ -6,10 +7,12 @@ import type { Config } from '@type/config';
 import type { EntityInformation, EntityState } from '@type/room';
 import { expect } from 'chai';
 import { nothing, type TemplateResult } from 'lit';
+import { stub } from 'sinon';
 
 describe('icon.ts', () => {
   let mockHass: HomeAssistant;
   let mockElement: HTMLElement;
+  let resolveEntityIconStub: sinon.SinonStub;
 
   beforeEach(() => {
     mockHass = {
@@ -22,6 +25,14 @@ describe('icon.ts', () => {
       },
     } as any as HomeAssistant;
     mockElement = document.createElement('div');
+    resolveEntityIconStub = stub(
+      iconCacheModule,
+      'resolveEntityIcon',
+    ).returns(undefined);
+  });
+
+  afterEach(() => {
+    resolveEntityIconStub.restore();
   });
 
   describe('renderProblemIndicator', () => {

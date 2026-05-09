@@ -1,5 +1,6 @@
 import { HassUpdateMixin } from '@cards/mixins/hass-update-mixin';
 import { SubscribeEntityStateMixin } from '@cards/mixins/subscribe-entity-state-mixin';
+import { resolveEntityIcon } from '@delegates/utils/icon-cache';
 import { fireEvent } from '@hass/common/dom/fire_event';
 // more-info-mixin is now compiled
 import { computeEntityName } from '@hass/common/entity/compute_entity_name';
@@ -50,7 +51,7 @@ export class ProblemEntityRow extends SubscribeEntityStateMixin(
         class="problem-entity-row ${isActive ? 'active' : 'inactive'}"
         @click=${this._handleClick}
       >
-        <ha-state-icon .hass=${this.hass} .stateObj=${s}></ha-state-icon>
+        <ha-state-icon .hass=${this.hass} .stateObj=${s} .icon=${resolveEntityIcon(this.hass, s)}></ha-state-icon>
         <div class="entity-info">
           <div class="entity-name">${displayName}</div>
           <div class="entity-state">${stateDisplay(this.hass, s)}</div>

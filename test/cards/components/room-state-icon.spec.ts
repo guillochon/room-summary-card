@@ -2,6 +2,7 @@ import { RoomStateIcon } from '@cards/components/room-state-icon/room-state-icon
 import { styles } from '@cards/components/room-state-icon/styles';
 import * as featureModule from '@config/feature';
 import * as actionHandlerModule from '@delegates/action-handler-delegate';
+import * as iconCacheModule from '@delegates/utils/icon-cache';
 import * as computeEntityNameModule from '@hass/common/entity/compute_entity_name';
 import type {
   MoreInfoActionConfig,
@@ -41,6 +42,8 @@ describe('room-state-icon.ts', () => {
   let renderStateDisplayStub: sinon.SinonStub;
   let computeEntityIconStub: sinon.SinonStub;
   let renderBadgeElementsStub: sinon.SinonStub;
+  let prefetchIconResourcesStub: sinon.SinonStub;
+  let resolveEntityIconStub: sinon.SinonStub;
 
   const mockEntityState: EntityState = createStateEntity(
     'light',
@@ -123,6 +126,14 @@ describe('room-state-icon.ts', () => {
       badgeSquadModule,
       'renderBadgeElements',
     ).returns([]);
+    prefetchIconResourcesStub = stub(
+      iconCacheModule,
+      'prefetchIconResources',
+    );
+    resolveEntityIconStub = stub(
+      iconCacheModule,
+      'resolveEntityIcon',
+    ).returns(undefined);
 
     mockHass = {
       states: {
@@ -151,6 +162,8 @@ describe('room-state-icon.ts', () => {
     renderStateDisplayStub.restore();
     computeEntityIconStub.restore();
     renderBadgeElementsStub.restore();
+    prefetchIconResourcesStub.restore();
+    resolveEntityIconStub.restore();
   });
 
   describe('properties', () => {

@@ -1,7 +1,7 @@
 import { SensorCollection } from '@cards/components/sensor-collection/sensor-collection';
 import * as featureModule from '@config/feature';
 import * as actionHandlerModule from '@delegates/action-handler-delegate';
-import * as iconModule from '@delegates/retrievers/icons';
+import * as iconCacheModule from '@delegates/utils/icon-cache';
 import * as sensorUtilsModule from '@delegates/utils/sensor-utils';
 import type { HomeAssistant } from '@hass/types';
 import * as stateDisplayModule from '@html/state-display';
@@ -20,7 +20,9 @@ describe('sensor-collection.ts', () => {
   let element: SensorCollection;
   let mockHass: HomeAssistant;
   let hasFeatureStub: sinon.SinonStub;
-  let getIconResourcesStub: sinon.SinonStub;
+  let getCachedComponentIconsStub: sinon.SinonStub;
+  let prefetchIconResourcesStub: sinon.SinonStub;
+  let resolveEntityIconStub: sinon.SinonStub;
   let sensorDataToDisplayStub: sinon.SinonStub;
   let stateDisplayStub: sinon.SinonStub;
   let actionHandlerStub: sinon.SinonStub;
@@ -28,9 +30,18 @@ describe('sensor-collection.ts', () => {
 
   beforeEach(() => {
     hasFeatureStub = stub(featureModule, 'hasFeature').returns(false);
-    getIconResourcesStub = stub(iconModule, 'getIconResources').resolves({
-      resources: {},
-    });
+    getCachedComponentIconsStub = stub(
+      iconCacheModule,
+      'getCachedComponentIcons',
+    ).returns(null);
+    prefetchIconResourcesStub = stub(
+      iconCacheModule,
+      'prefetchIconResources',
+    );
+    resolveEntityIconStub = stub(
+      iconCacheModule,
+      'resolveEntityIcon',
+    ).returns(undefined);
     sensorDataToDisplayStub = stub(
       sensorUtilsModule,
       'sensorDataToDisplaySensors',
@@ -70,7 +81,9 @@ describe('sensor-collection.ts', () => {
 
   afterEach(() => {
     hasFeatureStub.restore();
-    getIconResourcesStub.restore();
+    getCachedComponentIconsStub.restore();
+    prefetchIconResourcesStub.restore();
+    resolveEntityIconStub.restore();
     sensorDataToDisplayStub.restore();
     stateDisplayStub.restore();
     actionHandlerStub.restore();
@@ -208,14 +221,12 @@ describe('sensor-collection.ts', () => {
     });
 
     it('should handle icon resources for multi sensors', () => {
-      const mockResources = {
-        resources: {
-          sensor: {
-            temperature: { default: 'mdi:thermometer' },
-          },
+      const mockCachedIcons = {
+        sensor: {
+          temperature: { default: 'mdi:thermometer' },
         },
       };
-      getIconResourcesStub.resolves(mockResources);
+      getCachedComponentIconsStub.returns(mockCachedIcons);
 
       const sensor = element.sensors.averaged[0]!;
       sensor.states = [
@@ -224,7 +235,7 @@ describe('sensor-collection.ts', () => {
       ] as EntityState[];
 
       element['renderMultiIcon'](sensor);
-      expect(getIconResourcesStub.calledWith(mockHass)).to.be.true;
+      expect(getCachedComponentIconsStub.called).to.be.true;
     });
   });
 

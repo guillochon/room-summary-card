@@ -4,12 +4,14 @@ import {
   actionHandler,
   handleClickAction,
 } from '@delegates/action-handler-delegate';
-import { getIconResources } from '@delegates/retrievers/icons';
+import {
+  getCachedComponentIcons,
+  prefetchIconResources,
+  resolveEntityIcon,
+} from '@delegates/utils/icon-cache';
 import { sensorDataToDisplaySensors } from '@delegates/utils/sensor-utils';
 import {
   FALLBACK_DOMAIN_ICONS,
-  type CategoryType,
-  type IconResources,
 } from '@hass/data/icon';
 import type { HomeAssistant } from '@hass/types';
 import { stateDisplay } from '@html/state-display';
@@ -23,7 +25,6 @@ import { d } from '@util/debug';
 import { CSSResult, LitElement, html, nothing, type TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import { until } from 'lit/directives/until.js';
 import { styles } from './styles';
 
 /**
@@ -75,6 +76,10 @@ export class SensorCollection extends HassUpdateMixin(LitElement) {
   // @ts-ignore
   override set hass(hass: HomeAssistant) {
     d(this.config, 'sensor-collection', 'set hass');
+
+    // Pre-fetch icon resources for fast synchronous icon resolution
+    prefetchIconResources(hass);
+
     this._hass = hass;
     this.hide = hasFeature(this.config, 'hide_sensor_icons');
     this._hideLabels = hasFeature(this.config, 'hide_sensor_labels');
@@ -208,22 +213,21 @@ export class SensorCollection extends HassUpdateMixin(LitElement) {
   ): TemplateResult | typeof nothing {
     if (this.hide) return nothing;
 
-    const iconPromise = getIconResources(this._hass).then(
-      (icons: IconResources<CategoryType['entity_component']>) => {
-        const icon =
-          icons.resources?.[sensor.domain]?.[sensor.device_class]?.default;
+    // Use cached component icons for synchronous (instant) rendering
+    const cached = getCachedComponentIcons();
+    if (cached) {
+      const icon =
+        cached[sensor.domain]?.[sensor.device_class]?.default;
 
-        if (icon) return html`<ha-icon .icon=${icon}></ha-icon>`;
+      if (icon) return html`<ha-icon .icon=${icon}></ha-icon>`;
+    }
 
-        const fallback =
-          FALLBACK_DOMAIN_ICONS[
-            sensor.domain as keyof typeof FALLBACK_DOMAIN_ICONS
-          ];
-        return fallback ? html`<ha-icon .icon=${fallback}></ha-icon>` : nothing;
-      },
-    );
-
-    return html`${until(iconPromise)}`;
+    // Fallback to bundled domain icons
+    const fallback =
+      FALLBACK_DOMAIN_ICONS[
+        sensor.domain as keyof typeof FALLBACK_DOMAIN_ICONS
+      ];
+    return fallback ? html`<ha-icon .icon=${fallback}></ha-icon>` : nothing;
   }
 
   private renderStateIcon(
@@ -231,10 +235,15 @@ export class SensorCollection extends HassUpdateMixin(LitElement) {
     icon?: string,
   ): TemplateResult | typeof nothing {
     if (this.hide || !state) return nothing;
+
+    // Pre-resolve the icon when not explicitly configured,
+    // so ha-state-icon uses the fast synchronous path
+    const resolvedIcon = icon ?? resolveEntityIcon(this._hass, state);
+
     return html`<ha-state-icon
       .hass=${this._hass}
       .stateObj=${state}
-      .icon=${icon}
+      .icon=${resolvedIcon}
     ></ha-state-icon>`;
   }
 }

@@ -1,6 +1,7 @@
 import { Badge } from '@cards/components/badge/badge';
 import { styles } from '@cards/components/badge/styles';
 import * as badgeStateModule from '@delegates/utils/badge-state';
+import * as iconCacheModule from '@delegates/utils/icon-cache';
 import * as renderTileBadgeModule from '@hass/panels/lovelace/cards/tile/badges/tile-badge';
 import type { HomeAssistant } from '@hass/types';
 import { fixture } from '@open-wc/testing-helpers';
@@ -19,6 +20,7 @@ describe('badge.ts', () => {
   let getMatchingBadgeStateStub: sinon.SinonStub;
   let renderTileBadgeStub: sinon.SinonStub;
   let stylesToHostCssStub: sinon.SinonStub;
+  let resolveEntityIconStub: sinon.SinonStub;
 
   const mockBadgeConfig: BadgeConfig = {
     entity_id: 'light.living_room',
@@ -42,6 +44,10 @@ describe('badge.ts', () => {
     stylesToHostCssStub = stub(styleConverterModule, 'stylesToHostCss').returns(
       nothing,
     );
+    resolveEntityIconStub = stub(
+      iconCacheModule,
+      'resolveEntityIcon',
+    ).returns(undefined);
 
     mockHass = {
       states: {
@@ -61,6 +67,7 @@ describe('badge.ts', () => {
     getMatchingBadgeStateStub.restore();
     renderTileBadgeStub.restore();
     stylesToHostCssStub.restore();
+    resolveEntityIconStub.restore();
   });
 
   describe('config and properties', () => {
